@@ -1,0 +1,54 @@
+const unsigned char sin_table[]={
+0, 25, 49, 73, 96, 118, 139, 159, 177, 193, 208, 220, 231, 239, 245, 249, 250, 249, 245, 239, 231, 220, 208, 193, 177, 159, 139, 118, 96, 73, 49, 25
+};
+unsigned int TBL_POINTER_NEW, TBL_POINTER_OLD, TBL_POINTER_SHIFT, SET_FREQ, adder;
+unsigned int TBL_temp,   FBV, BATTERY, output;
+short fdivisor;
+unsigned char DUTY_CYCLE,FB_Step, AVG_NUM=10;
+short inv=0;
+int i=0;
+float DutyCycle=0.0;
+
+void interrupt(){
+if (TMR2IF_bit == 1 && TMR2IE_bit==1){
+TBL_POINTER_NEW = TBL_POINTER_OLD + SET_FREQ;
+if (TBL_POINTER_NEW < TBL_POINTER_OLD){
+CCP1CON.P1M1 = ~CCP1CON.P1M1; //Reverse direction of full-bridge
+PORTA.F2=1;
+}
+TBL_POINTER_SHIFT = TBL_POINTER_NEW >> 11;
+DUTY_CYCLE = TBL_POINTER_SHIFT;
+CCPR1L = sin_table[DUTY_CYCLE];
+TBL_POINTER_OLD = TBL_POINTER_NEW;
+TMR2IF_bit = 0;
+}
+}
+int j;
+void main() {
+CMCON0 = 7; //Disable Comparator
+SET_FREQ = 410;
+TBL_POINTER_SHIFT = 0;
+TBL_POINTER_NEW = 0;
+TBL_POINTER_OLD = 0;
+DUTY_CYCLE = 0;
+PR2 = 249;
+TRISC = 0x00111101;
+TRISA0_BIT=1;
+TRISA1_BIT=1;
+TRISA2_BIT=0;
+ANSEL.F0=1;
+ANSEL.F1=0;
+CCP1CON = 0x4C;
+T2CON.F2=1;
+TMR2IF_bit = 0;
+TMR2IE_bit = 1;
+GIE_bit = 1;
+PEIE_bit = 1;
+TRISC =0b00000000;
+ADC_Init();
+PORTC.F0=0;
+for(;;)
+{
+
+}
+}
